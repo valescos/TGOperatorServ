@@ -29,21 +29,24 @@ bot.api.setMyCommands([{
 
 bot.on('message', async (ctx) => {
     //Ответ бота направляется по id сокета из базы
-    if (ctx.message.is_topic_message && !ctx.from.is_bot) {
-        const { data, err } = await supabase.from('ChatStore')
-        .select('message_thread_id, socket_id')
-        .eq('message_thread_id', ctx.message.message_thread_id);
-        console.log(err);
-        io.to(data[0].socket_id).emit('receive', ctx.message.text);
-    }
+
+    ctx.reply(io)
+
+    // if (ctx.message.is_topic_message && !ctx.from.is_bot) {
+    //     const { data, err } = await supabase.from('ChatStore')
+    //     .select('message_thread_id, socket_id')
+    //     .eq('message_thread_id', ctx.message.message_thread_id);
+    //     console.log(err);
+
+        
+    //     io.to(data[0].socket_id).emit('receive', ctx.message.text);
+    // }
 })
 
 io.on('connection', (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
 
     socket.on("sendMessage", async (payload) => {
-        // const topicID = topicList.map(e => e.name).includes(payload.visit_id) ? 
-        // topicList.filter(e => e.name === payload.visit_id)[0].message_thread_id : false;
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id, name')
         .eq('name', payload.visit_id);
@@ -64,8 +67,6 @@ io.on('connection', (socket) => {
             //Создание нового топика с именем соотвествующим visit_id
             const newTopicID = await bot.api.createForumTopic(-1002343711971, payload.visit_id);
 
-            console.log('newTopicID', newTopicID)
-
             //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
             const { error } = await supabase.from('ChatStore').insert({ 
                 message_thread_id: newTopicID.message_thread_id,
@@ -84,7 +85,6 @@ io.on('connection', (socket) => {
         console.log('Клиент отключился: ', socket.id);
     })
 })
-
 
 //Ошибки из доки GrammyJS
 bot.catch((err) => {
