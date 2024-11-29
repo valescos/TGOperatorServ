@@ -40,10 +40,10 @@ bot.on('message', async (ctx) => {
             .select('operator_msg_que')
             .eq('message_thread_id', ctx.message.message_thread_id);
 
-            const bufferMessages = [...JSON.parse(data[0].operator_msg_que), ctx.message.text]
+            console.logo(data);
 
             const { error } = await supabase.from('ChatStore')
-            .update({ operator_msg_que: JSON.stringify(bufferMessages) })
+            .update({ operator_msg_que: ctx.message.text })
             .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
