@@ -36,8 +36,14 @@ bot.on('message', async (ctx) => {
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
+            const { data, err } = await supabase.from('ChatStore')
+            .select('operator_msg_que')
+            .eq('message_thread_id', ctx.message.message_thread_id);
+
+            const bufferMessages = [...JSON.parse(data[0].operator_msg_que), ctx.message.text]
+
             const { error } = await supabase.from('ChatStore')
-            .update({ operator_msg_que: JSON.stringify(ctx.message.text) })
+            .update({ operator_msg_que: JSON.stringify(bufferMessages) })
             .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
