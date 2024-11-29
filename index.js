@@ -53,6 +53,7 @@ io.on('connection', (socket) => {
         .select('message_thread_id, name')
         .eq('name', payload.visit_id);
 
+        console.log('payload.socket_id::::>>>>', payload.socket_id);
 
         if (data[0]) {
             //Обновление сокет id на случай переподключения
