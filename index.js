@@ -29,13 +29,19 @@ bot.api.setMyCommands([{
 
 bot.on('message', async (ctx) => {
     //Ответ бота направляется по id сокета из базы
+    //operator_msg_que
 
     if (ctx.message.is_topic_message && !ctx.from.is_bot) {
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id, socket_id')
         .eq('message_thread_id', ctx.message.message_thread_id);
         console.log(err);
-        io.to(data[0].socket_id).emit('receive', ctx.message.text);
+
+        if (!!io.sockets.sockets[data[0].socket_id]) {
+            io.to(data[0].socket_id).emit('receive', ctx.message.text);
+        } else {
+            console.log(`Сокет с айдишником ${data[0].socket_id} не подключен`)
+        }
     }
 })
 
@@ -46,8 +52,7 @@ io.on('connection', (socket) => {
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id, name')
         .eq('name', payload.visit_id);
-        console.log('err', err);
-        console.log('data', data)
+
 
         if (data[0]) {
             //Обновление сокет id на случай переподключения
@@ -56,7 +61,6 @@ io.on('connection', (socket) => {
             const { error } = await supabase.from('ChatStore')
             .update({ socket_id: payload.socket_id })
             .eq('name', payload.visit_id);
-            console.log(error);
 
             await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
                 message_thread_id: data[0].message_thread_id
@@ -71,7 +75,6 @@ io.on('connection', (socket) => {
                 name: newTopicID.name,
                 socket_id: payload.socket_id
             })
-            console.log(error);
 
             await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
                 message_thread_id: newTopicID.message_thread_id
