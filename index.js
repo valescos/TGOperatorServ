@@ -29,17 +29,13 @@ bot.on('message', async (ctx) => {
 
     if (ctx.message.is_topic_message && !ctx.from.is_bot) {
         const { data, err } = await supabase.from('ChatStore')
-        .select('message_thread_id, socket_id')
+        .select('message_thread_id, socket_id, operator_msg_que')
         .eq('message_thread_id', ctx.message.message_thread_id);
         console.log(err);
 
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
-            const { data, err } = await supabase.from('ChatStore')
-            .select('operator_msg_que')
-            .eq('message_thread_id', ctx.message.message_thread_id);
-
             console.log(data.operator_msg_que);
             console.log(ctx.message.text);
 
