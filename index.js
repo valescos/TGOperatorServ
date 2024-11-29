@@ -37,9 +37,7 @@ bot.on('message', async (ctx) => {
         .eq('message_thread_id', ctx.message.message_thread_id);
         console.log(err);
 
-        console.log("SOCKETS", io.sockets.sockets.has(data[0].socket_id))
-
-        if (!!io.sockets.sockets[data[0].socket_id]) {
+        if (io.sockets.sockets.has(data[0].socket_id)) {
             io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
             console.log(`Сокет с айдишником ${data[0].socket_id} не подключен`)
