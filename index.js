@@ -12,11 +12,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_API
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server( server, {
-    cors: {
-        origin: '*'
-    }
-})
+const io = new Server( server, { cors: { origin: '*' } })
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
 
 app.use(cors());
@@ -38,9 +34,11 @@ bot.on('message', async (ctx) => {
         console.log(err);
 
         if (io.sockets.sockets.has(data[0].socket_id)) {
-            io.to(data[0].socket_id).emit('receive', ctx.message.text);
+        io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
-            console.log(`Сокет с айдишником ${data[0].socket_id} не подключен`)
+            const { error } = await supabase.from('ChatStore')
+            .update({ operator_msg_que: JSON.stringify(ctx.message.text) })
+            .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
 })
@@ -53,12 +51,8 @@ io.on('connection', (socket) => {
         .select('message_thread_id, name')
         .eq('name', payload.visit_id);
 
-        console.log('payload.socket_id::::>>>>', payload.socket_id);
-
         if (data[0]) {
             //Обновление сокет id на случай переподключения
-            console.log('socket.id:::>>>', socket.id);
-
             const { error } = await supabase.from('ChatStore')
             .update({ socket_id: payload.socket_id })
             .eq('name', payload.visit_id);
