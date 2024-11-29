@@ -40,7 +40,7 @@ bot.on('message', async (ctx) => {
             .select('operator_msg_que')
             .eq('message_thread_id', ctx.message.message_thread_id);
 
-            console.logo(data);
+            console.log(data);
 
             const { error } = await supabase.from('ChatStore')
             .update({ operator_msg_que: ctx.message.text })
