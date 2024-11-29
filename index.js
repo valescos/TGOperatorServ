@@ -36,7 +36,7 @@ bot.on('message', async (ctx) => {
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
-            console.log(data.operator_msg_que);
+            console.log(data[0].operator_msg_que);
             console.log(ctx.message.text);
 
             const { error } = await supabase.from('ChatStore')
