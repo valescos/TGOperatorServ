@@ -30,17 +30,13 @@ bot.api.setMyCommands([{
 bot.on('message', async (ctx) => {
     //Ответ бота направляется по id сокета из базы
 
-    ctx.reply(io)
-
-    // if (ctx.message.is_topic_message && !ctx.from.is_bot) {
-    //     const { data, err } = await supabase.from('ChatStore')
-    //     .select('message_thread_id, socket_id')
-    //     .eq('message_thread_id', ctx.message.message_thread_id);
-    //     console.log(err);
-
-        
-    //     io.to(data[0].socket_id).emit('receive', ctx.message.text);
-    // }
+    if (ctx.message.is_topic_message && !ctx.from.is_bot) {
+        const { data, err } = await supabase.from('ChatStore')
+        .select('message_thread_id, socket_id')
+        .eq('message_thread_id', ctx.message.message_thread_id);
+        console.log(err);
+        io.to(data[0].socket_id).emit('receive', ctx.message.text);
+    }
 })
 
 io.on('connection', (socket) => {
@@ -55,6 +51,8 @@ io.on('connection', (socket) => {
 
         if (data[0]) {
             //Обновление сокет id на случай переподключения
+            console.log('socket.id:::>>>', socket.id);
+
             const { error } = await supabase.from('ChatStore')
             .update({ socket_id: payload.socket_id })
             .eq('name', payload.visit_id);
