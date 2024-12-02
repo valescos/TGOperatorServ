@@ -59,10 +59,11 @@ io.on('connection', async (socket) => {
         //Обновление сокет id на случай переподключения
 
         console.log('повторый заход', data)
-
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data.name);
+        console.log("error", error )
+
     } else if (data[0].operator_msg_que) {
         console.log(':::>>>', data[0].operator_msg_que);
     } else {
