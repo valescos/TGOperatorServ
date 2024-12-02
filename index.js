@@ -57,6 +57,9 @@ io.on('connection', async (socket) => {
     //обработка сокет-рукопожатия
     if (data[0]) { 
         //Обновление сокет id на случай переподключения
+
+        console.log('повторый заход', data)
+
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data.name);
