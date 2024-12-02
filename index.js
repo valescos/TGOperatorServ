@@ -55,6 +55,11 @@ io.on('connection', async (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
     console.log('Доп. параметры: ', socket.handshake.query.visit_id);
 
+    const { data, err } = await supabase.from('ChatStore')
+    .select('name').eq('name', socket.handshake.query.visit_id);
+
+    console.log(data)
+
     //handleHandshake(socket.handshake.query.visit_id, socket.id);
 
     socket.on("sendMessage", async (payload) => {
