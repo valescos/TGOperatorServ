@@ -55,9 +55,10 @@ io.on('connection', async (socket) => {
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
-    if (!!data[0]["operator_msg_que"]) { 
-        console.log(':::>>>', data[0]["operator_msg_que"]);
-    } else if (data[0]) {
+    console.log(':::>>>', JSON.stringify(data[0]));
+
+
+    if (data[0]) {
         //Обновление сокет id на случай переподключения
         console.log('повторый заход', data)
         const { error } = await supabase.from('ChatStore')
