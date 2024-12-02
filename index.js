@@ -38,8 +38,11 @@ bot.on('message', async (ctx) => {
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
+
+            const msgQue = data[0].operator_msg_que ? [...data[0].operator_msg_que, ctx.message.text] : [ ctx.message.text ]
+
             const { error } = await supabase.from('ChatStore')
-            .update({operator_msg_que: [ctx.message.text]})
+            .update({operator_msg_que: msgQue})
             .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
