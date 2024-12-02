@@ -55,15 +55,16 @@ io.on('connection', async (socket) => {
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
-    const queMessages = JSON.stringify(data[0].operator_msg_que);
-
-    if (queMessages !== '[]') {
-        JSON.parse(queMessages).forEach(element => {
-            console.log(element)
-        });
-    }
-
     if (data[0]) {
+
+        const queMessages = JSON.stringify(data[0].operator_msg_que);
+
+        if (queMessages !== '[]') {
+            JSON.parse(queMessages).forEach(element => {
+                console.log(element)
+            });
+        }
+
         //Обновление сокет id на случай переподключения
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
