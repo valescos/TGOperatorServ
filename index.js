@@ -60,9 +60,14 @@ io.on('connection', async (socket) => {
         const queMessages = JSON.stringify(data[0].operator_msg_que);
 
         if (queMessages !== '[]') {
-            JSON.parse(queMessages).forEach(element => {
-                console.log(element)
+
+            JSON.parse(queMessages).forEach(message => {
+                io.to(data[0].socket_id).emit('receive', message);
             });
+
+            const { error } = await supabase.from('ChatStore')
+            .update({ operator_msg_que: [] })
+            .eq('name', data[0].name);
         }
 
         //Обновление сокет id на случай переподключения
