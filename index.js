@@ -77,6 +77,9 @@ io.on('connection', async (socket) => {
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id').eq('socket_id', socket.id);
 
+        console.log('socket.id', socket.id)
+        console.log('SendMessage data', data)
+
         if (data[0]) {
         await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
             message_thread_id: data[0].message_thread_id
