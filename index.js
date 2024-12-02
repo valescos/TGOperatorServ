@@ -38,47 +38,51 @@ bot.on('message', async (ctx) => {
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
+        const msgQue = data[0].operator_msg_que ?
+        [...data[0].operator_msg_que, ctx.message.text] :
+        [ ctx.message.text ]
 
-            const msgQue = data[0].operator_msg_que ? [...data[0].operator_msg_que, ctx.message.text] : [ ctx.message.text ]
-
-            const { error } = await supabase.from('ChatStore')
-            .update({operator_msg_que: msgQue})
-            .eq('message_thread_id', ctx.message.message_thread_id);
+        const { error } = await supabase.from('ChatStore')
+        .update({ operator_msg_que: msgQue })
+        .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
 })
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
+    console.log('Доп. параметры: ', socket.handshake.query.visit_id);
+    
+    const { data, err } = await supabase.from('ChatStore')
+    .select('name').eq('name', socket.handshake.query.visit_id);
+
+    //обработка сокет-рукопожатия
+    if (data[0]) { 
+        //Обновление сокет id на случай переподключения
+        const { error } = await supabase.from('ChatStore')
+        .update({ socket_id: payload.socket_id })
+        .eq('name', data.name);
+    } else {
+        //Создание нового топика с именем соотвествующим visit_id
+        const newTopicID = await bot.api.createForumTopic(-1002343711971, data.name);
+        //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
+        const { error } = await supabase.from('ChatStore').insert({ 
+        message_thread_id: newTopicID.message_thread_id,
+        name: newTopicID.name,
+        socket_id: payload.socket_id
+        })
+    }
 
     socket.on("sendMessage", async (payload) => {
         const { data, err } = await supabase.from('ChatStore')
-        .select('message_thread_id, name')
-        .eq('name', payload.visit_id);
+        .select('message_thread_id').eq('socket_id', socket.id);
 
         if (data[0]) {
-            //Обновление сокет id на случай переподключения
-            const { error } = await supabase.from('ChatStore')
-            .update({ socket_id: payload.socket_id })
-            .eq('name', payload.visit_id);
-
             await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
                 message_thread_id: data[0].message_thread_id
             });
         } else {
-            //Создание нового топика с именем соотвествующим visit_id
-            const newTopicID = await bot.api.createForumTopic(-1002343711971, payload.visit_id);
-
-            //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
-            const { error } = await supabase.from('ChatStore').insert({ 
-                message_thread_id: newTopicID.message_thread_id,
-                name: newTopicID.name,
-                socket_id: payload.socket_id
-            })
-
-            await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
-                message_thread_id: newTopicID.message_thread_id
-            })
+            console.error('Телеграмм-топик отсутствует')
         }
     })
 
