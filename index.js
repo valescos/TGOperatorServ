@@ -12,7 +12,10 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_API
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server( server, { cors: { origin: '*' } })
+const io = new Server( server, { cors: {
+    origin: "https://dev.network-technologies.ru",
+    methods: ["GET", "POST"]
+  } })
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
 
 app.use(cors());
@@ -78,11 +81,11 @@ io.on('connection', async (socket) => {
         .select('message_thread_id').eq('socket_id', socket.id);
 
         if (data[0]) {
-            await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
-                message_thread_id: data[0].message_thread_id
-            });
+        await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
+            message_thread_id: data[0].message_thread_id
+        });
         } else {
-            console.error('Телеграмм-топик отсутствует')
+        console.error('Телеграмм-топик отсутствует')
         }
     })
 
