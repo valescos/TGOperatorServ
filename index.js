@@ -56,15 +56,11 @@ io.on('connection', async (socket) => {
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
     if (data[0]) {
-
         const queMessages = JSON.stringify(data[0].operator_msg_que);
 
         if (queMessages !== '[]') {
 
-            JSON.parse(queMessages).forEach(message => {
-                io.to(socket.id).emit('receive', message);
-                console.log(message);
-            });
+            io.to(socket.id).emit('receiveMsgArray', queMessages)
 
             const { error } = await supabase.from('ChatStore')
             .update({ operator_msg_que: [] })
@@ -75,6 +71,7 @@ io.on('connection', async (socket) => {
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data[0].name);
+
     } else {
         //Создание нового топика с именем соотвествующим visit_id
         const newTopicID = await bot.api.createForumTopic(-1002343711971, socket.handshake.query.visit_id);
