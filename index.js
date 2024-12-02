@@ -52,7 +52,7 @@ bot.on('message', async (ctx) => {
     }
 })
 
-io.on('connection', async (socket) => {
+io.on('connection', (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
     console.log('Доп. параметры: ', socket.handshake.query.visit_id);
 
