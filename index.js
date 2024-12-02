@@ -58,9 +58,22 @@ io.on('connection', async (socket) => {
     const { data, err } = await supabase.from('ChatStore')
     .select('name').eq('name', socket.handshake.query.visit_id);
 
-    console.log(data)
-
-    //handleHandshake(socket.handshake.query.visit_id, socket.id);
+    //обработка сокет-рукопожатия
+    if (data[0]) { 
+        //Обновление сокет id на случай переподключения
+        const { error } = await supabase.from('ChatStore')
+        .update({ socket_id: socket.id })
+        .eq('name', data.name);
+    } else {
+        //Создание нового топика с именем соотвествующим visit_id
+        const newTopicID = await bot.api.createForumTopic(-1002343711971, socket.handshake.query.visit_id);
+        //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
+        const { error } = await supabase.from('ChatStore').insert({ 
+        message_thread_id: newTopicID.message_thread_id,
+        name: newTopicID.name,
+        socket_id: socket.id
+        })
+    }
 
     socket.on("sendMessage", async (payload) => {
         const { data, err } = await supabase.from('ChatStore')
@@ -99,26 +112,3 @@ bot.start();
 server.listen(process.env.PORT, () => {
     console.log(`Сервер работает на порте: ${process.env.PORT}`)
 });
-
-
-async function handleHandshake(visit_id, socket_id) {
-    const { data, err } = await supabase.from('ChatStore')
-    .select('name').eq('name', visit_id);
-
-    //обработка сокет-рукопожатия
-    if (data[0]) { 
-        //Обновление сокет id на случай переподключения
-        const { error } = await supabase.from('ChatStore')
-        .update({ socket_id: socket_id })
-        .eq('name', data.name);
-    } else {
-        //Создание нового топика с именем соотвествующим visit_id
-        const newTopicID = await bot.api.createForumTopic(-1002343711971, data.name);
-        //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
-        const { error } = await supabase.from('ChatStore').insert({ 
-        message_thread_id: newTopicID.message_thread_id,
-        name: newTopicID.name,
-        socket_id: socket_id
-        })
-    }
-}
