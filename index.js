@@ -13,9 +13,8 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_API
 const app = express();
 const server = http.createServer(app);
 const io = new Server( server, { cors: {
-    origin: "https://dev.network-technologies.ru",
-    methods: ["GET", "POST"]
-  } })
+    origin: "*",
+  }})
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
 
 app.use(cors());
@@ -56,7 +55,7 @@ io.on('connection', (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
     console.log('Доп. параметры: ', socket.handshake.query.visit_id);
 
-    handleHandshake(socket.handshake.query.visit_id, socket.id);
+    //handleHandshake(socket.handshake.query.visit_id, socket.id);
 
     socket.on("sendMessage", async (payload) => {
         const { data, err } = await supabase.from('ChatStore')
