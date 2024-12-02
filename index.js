@@ -50,13 +50,13 @@ bot.on('message', async (ctx) => {
 
 io.on('connection', async (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
-    
+
     //обработка сокет-рукопожатия
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
-    if (!!data[0].operator_msg_que) { 
-        console.log(':::>>>', data[0].operator_msg_que);
+    if (!!data[0]["operator_msg_que"]) { 
+        console.log(':::>>>', data[0]["operator_msg_que"]);
     } else if (data[0]) {
         //Обновление сокет id на случай переподключения
         console.log('повторый заход', data)
