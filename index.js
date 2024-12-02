@@ -62,7 +62,7 @@ io.on('connection', async (socket) => {
         if (queMessages !== '[]') {
 
             JSON.parse(queMessages).forEach(message => {
-                io.to(data[0].socket_id).emit('receive', message);
+                io.to(socket.id).emit('receive', message);
             });
 
             const { error } = await supabase.from('ChatStore')
