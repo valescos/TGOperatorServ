@@ -55,15 +55,19 @@ io.on('connection', async (socket) => {
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
-    console.log(':::>>>', JSON.stringify(data[0].operator_msg_que));
+    const queMessages = JSON.stringify(data[0].operator_msg_que);
+
+    if (queMessages !== '[]') {
+        JSON.parse(queMessages).forEach(element => {
+            console.log(element)
+        });
+    }
 
     if (data[0]) {
         //Обновление сокет id на случай переподключения
-        console.log('повторый заход', data)
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data[0].name);
-        console.log("error", error )
     } else {
         //Создание нового топика с именем соотвествующим visit_id
         const newTopicID = await bot.api.createForumTopic(-1002343711971, socket.handshake.query.visit_id);
