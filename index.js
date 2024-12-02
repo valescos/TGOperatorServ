@@ -39,7 +39,8 @@ bot.on('message', async (ctx) => {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
             const { error } = await supabase.from('ChatStore')
-            .insert({operator_msg_que: ctx.message.text})
+            .update({operator_msg_que: [ctx.message.text]})
+            .eq('message_thread_id', ctx.message.message_thread_id);
         }
     }
 })
