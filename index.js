@@ -26,9 +26,6 @@ bot.api.setMyCommands([{
 ]);
 
 bot.on('message', async (ctx) => {
-    //Ответ бота направляется по id сокета из базы
-    //operator_msg_que
-
     if (ctx.message.is_topic_message && !ctx.from.is_bot) {
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id, socket_id, operator_msg_que, operator_msg_que')
@@ -53,10 +50,9 @@ bot.on('message', async (ctx) => {
 
 io.on('connection', async (socket) => {
     console.log('Новый клиент подключен: ', socket.id);
-    console.log('Доп. параметры: ', socket.handshake.query.visit_id);
 
     const { data, err } = await supabase.from('ChatStore')
-    .select('name').eq('name', socket.handshake.query.visit_id);
+    .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
     //обработка сокет-рукопожатия
     if (data[0]) { 
@@ -64,6 +60,8 @@ io.on('connection', async (socket) => {
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data.name);
+    } else if (data[0].operator_msg_que) {
+        console.log(':::>>>', data[0].operator_msg_que);
     } else {
         //Создание нового топика с именем соотвествующим visit_id
         const newTopicID = await bot.api.createForumTopic(-1002343711971, socket.handshake.query.visit_id);
