@@ -55,6 +55,7 @@ io.on('connection', async (socket) => {
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
+    //если канал есть обрабатываем данные, если канала нет - создаем канал
     if (data[0]) {
         //пересылаем сообщения, пришедшие пока сокет был отключен
         const queMessages = JSON.stringify(data[0].operator_msg_que);
