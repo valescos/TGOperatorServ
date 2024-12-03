@@ -49,33 +49,31 @@ bot.on('message', async (ctx) => {
 })
 
 io.on('connection', async (socket) => {
-    console.log('Новый клиент подключен: ', socket.id);
 
     //обработка сокет-рукопожатия
+    console.log('Новый клиент подключен: ', socket.id);
+
+    //проверяем наличие телеграмм-канала и очереди отложенных сообщений в нем
     const { data, err } = await supabase.from('ChatStore')
     .select('name, operator_msg_que').eq('name', socket.handshake.query.visit_id);
 
     if (data[0]) {
+        //пересылаем сообщения, пришедшие пока сокет был отключен
         const queMessages = JSON.stringify(data[0].operator_msg_que);
-
         if (queMessages !== '[]') {
-
             io.to(socket.id).emit('receiveMsgArray', queMessages)
-
             const { error } = await supabase.from('ChatStore')
             .update({ operator_msg_que: [] })
             .eq('name', data[0].name);
         }
-
-        //Обновление сокет id на случай переподключения
+        //обновляем сокет id на случай переподключения
         const { error } = await supabase.from('ChatStore')
         .update({ socket_id: socket.id })
         .eq('name', data[0].name);
-
     } else {
-        //Создание нового топика с именем соотвествующим visit_id
+        //создаем новый топик с именем соотвествующим visit_id
         const newTopicID = await bot.api.createForumTopic(-1002343711971, socket.handshake.query.visit_id);
-        //Создание в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграм
+        //создаем в базе записи о новом visit_id и соотвествующим ему сокету и message_thread_id в супергруппе телеграма
         const { error } = await supabase.from('ChatStore').insert({ 
         message_thread_id: newTopicID.message_thread_id,
         name: newTopicID.name,
@@ -84,12 +82,11 @@ io.on('connection', async (socket) => {
     }
 
     socket.on("sendMessage", async (payload) => {
+        //достаем из базы айдишник топика в телеграме и соотвествующий ему сокет айди
         const { data, err } = await supabase.from('ChatStore')
         .select('message_thread_id').eq('socket_id', socket.id);
 
-        console.log('socket.id', socket.id)
-        console.log('SendMessage data', data)
-
+        //пересылаем сообщение в группу через телеграм апи
         if (data[0]) {
         await bot.api.sendMessage(process.env.TELEGRAM_WORK_GROUP_ID, payload.text, {
             message_thread_id: data[0].message_thread_id
@@ -104,7 +101,7 @@ io.on('connection', async (socket) => {
     })
 })
 
-//Ошибки из доки GrammyJS
+//обработка ощшибок бота из документации GrammyJS
 bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Err while handling update: ${ctx.update.update_id}`);
