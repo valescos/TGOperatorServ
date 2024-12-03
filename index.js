@@ -26,21 +26,20 @@ bot.api.setMyCommands([{
 ]);
 
 bot.on('message', async (ctx) => {
+    //обработка сообщений от оператора
     if (ctx.message.is_topic_message && !ctx.from.is_bot) {
+        //достаем из базы данные о айди топика, сокете и отложенных сообщениях
         const { data, err } = await supabase.from('ChatStore')
-        .select('message_thread_id, socket_id, operator_msg_que, operator_msg_que')
+        .select('message_thread_id, socket_id, operator_msg_que')
         .eq('message_thread_id', ctx.message.message_thread_id);
-        console.log(err);
 
-        console.log('DATA>>>>', data)
-
+        //если сокет открыт пересылаем сообщение клиенту, если нет - сохраняем в очередь отложенных сообщений
         if (io.sockets.sockets.has(data[0].socket_id)) {
         io.to(data[0].socket_id).emit('receive', ctx.message.text);
         } else {
         const msgQue = data[0].operator_msg_que ?
         [...data[0].operator_msg_que, ctx.message.text] :
         [ ctx.message.text ]
-
         const { error } = await supabase.from('ChatStore')
         .update({ operator_msg_que: msgQue })
         .eq('message_thread_id', ctx.message.message_thread_id);
@@ -49,7 +48,6 @@ bot.on('message', async (ctx) => {
 })
 
 io.on('connection', async (socket) => {
-
     //обработка сокет-рукопожатия
     console.log('Новый клиент подключен: ', socket.id);
 
