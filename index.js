@@ -99,7 +99,7 @@ io.on('connection', async (socket) => {
     })
 })
 
-//обработка ощшибок бота из документации GrammyJS
+//обработка ошибок бота из документации GrammyJS
 bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Err while handling update: ${ctx.update.update_id}`);
